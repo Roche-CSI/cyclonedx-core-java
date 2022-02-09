@@ -20,10 +20,11 @@
 
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>org.cyclonedx</groupId>
+    <!-- Roche-CSI: Changed group to allow publishing, changed version to snapshot -->
+    <groupId>com.github.roche_csi.cyclonedx_core_java</groupId>
     <artifactId>cyclonedx-core-java</artifactId>
     <packaging>jar</packaging>
-    <version>5.0.4</version>
+    <version>5.0.4-SNAPSHOT</version>
 
     <name>CycloneDX Core (Java)</name>
     <description>The CycloneDX core module provides a model representation of the BOM along with utilities to assist in creating, parsing, and validating BOMs.</description>
@@ -52,6 +53,12 @@
                 <role>Developer</role>
             </roles>
         </developer>
+        <!-- Roche-CSI: Added developer -->
+        <developer>
+            <name>Greg Gibeling</name>
+            <email>greg.gibeling@roche.com</email>
+            <organization>Roche</organization>
+        </developer>
     </developers>
 
     <properties>
@@ -69,31 +76,36 @@
     </properties>
 
     <scm>
-        <connection>scm:git:git@github.com:CycloneDX/cyclonedx-core-java.git</connection>
-        <url>https://github.com/CycloneDX/cyclonedx-core-java.git</url>
-        <developerConnection>scm:git:git@github.com:CycloneDX/cyclonedx-core-java.git</developerConnection>
-        <tag>cyclonedx-core-java-5.0.4</tag>
+        <!-- Roche-CSI: Changed location -->
+        <connection>scm:git:git@github.com:Roche-CSI/cyclonedx-core-java.git</connection>
+        <url>https://github.com/Roche-CSI/cyclonedx-core-java.git</url>
+        <developerConnection>scm:git:git@github.com:Roche-CSI/cyclonedx-core-java.git</developerConnection>
     </scm>
 
     <issueManagement>
         <system>GitHub</system>
-        <url>https://github.com/CycloneDX/cyclonedx-core-java/issues</url>
+        <!-- Roche-CSI: Changed location -->
+        <url>https://github.com/Roche-CSI/cyclonedx-core-java/issues</url>
     </issueManagement>
 
     <ciManagement>
         <system>GitHub</system>
-        <url>https://github.com/CycloneDX/cyclonedx-core-java/actions</url>
+        <!-- Roche-CSI: Changed location -->
+        <url>https://github.com/Roche-CSI/cyclonedx-core-java/actions</url>
     </ciManagement>
 
     <distributionManagement>
-        <snapshotRepository>
-            <id>ossrh</id>
-            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-        </snapshotRepository>
+        <!-- Roche-CSI: Changed location -->
         <repository>
-            <id>ossrh</id>
-            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+            <id>github-deploy</id>
+            <name>GitHub Packages</name>
+            <url>https://maven.pkg.github.com/Roche-CSI/cyclonedx-core-java</url>
         </repository>
+        <snapshotRepository>
+            <id>github-deploy</id>
+            <name>GitHub Packages</name>
+            <url>https://maven.pkg.github.com/Roche-CSI/cyclonedx-core-java</url>
+        </snapshotRepository>
     </distributionManagement>
 
     <repositories>
