@@ -1,0 +1,29 @@
+# Roche-CSI: New CI workflow which deploys to gh packages
+name: Java CI with Maven
+on:
+  pull_request:
+    branches:
+    - master
+  push:
+    branches:
+    - master
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: Set up JDK 8
+      uses: actions/setup-java@v2
+      with:
+        distribution: adopt
+        java-version: 8
+        cache: maven
+    - name: Build with Maven
+      # Run maven deploy only on push or workflow dispatch to master
+      run: ./mvnw -s "${GITHUB_WORKSPACE}/.github/workflows/maven-settings.xml" -B ${{ (((github.event_name == 'push') || (github.event_name == 'workflow_dispatch')) && (github.ref == 'refs/heads/master')) && 'deploy' || 'package' }} --file pom.xml -P release -Dgpg.skip
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
