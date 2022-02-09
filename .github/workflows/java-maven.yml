@@ -24,6 +24,6 @@ jobs:
         cache: maven
     - name: Build with Maven
       # Run maven deploy only on push or workflow dispatch to Roche-CSI-main
-      run: ./mvnw -s "${GITHUB_WORKSPACE}/.github/workflows/maven-settings.xml" -B ${{ (((github.event_name == 'push') || (github.event_name == 'workflow_dispatch')) && (github.ref == 'refs/heads/Roche-CSI-main')) && 'deploy' || 'package' }} --file pom.xml -P release -Dgpg.skip
+      run: mvn -s "${GITHUB_WORKSPACE}/.github/workflows/maven-settings.xml" -B ${{ (((github.event_name == 'push') || (github.event_name == 'workflow_dispatch')) && (github.ref == 'refs/heads/Roche-CSI-main')) && 'deploy' || 'package' }} --file pom.xml -P release -Dgpg.skip
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
