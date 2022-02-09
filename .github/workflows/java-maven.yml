@@ -3,10 +3,10 @@ name: Java CI with Maven
 on:
   pull_request:
     branches:
-    - master
+    - Roche-CSI-main
   push:
     branches:
-    - master
+    - Roche-CSI-main
   workflow_dispatch:
 jobs:
   build:
@@ -23,7 +23,7 @@ jobs:
         java-version: 8
         cache: maven
     - name: Build with Maven
-      # Run maven deploy only on push or workflow dispatch to master
-      run: ./mvnw -s "${GITHUB_WORKSPACE}/.github/workflows/maven-settings.xml" -B ${{ (((github.event_name == 'push') || (github.event_name == 'workflow_dispatch')) && (github.ref == 'refs/heads/master')) && 'deploy' || 'package' }} --file pom.xml -P release -Dgpg.skip
+      # Run maven deploy only on push or workflow dispatch to Roche-CSI-main
+      run: mvn -s "${GITHUB_WORKSPACE}/.github/workflows/maven-settings.xml" -B ${{ (((github.event_name == 'push') || (github.event_name == 'workflow_dispatch')) && (github.ref == 'refs/heads/Roche-CSI-main')) && 'deploy' || 'package' }} --file pom.xml -P release -Dgpg.skip
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
