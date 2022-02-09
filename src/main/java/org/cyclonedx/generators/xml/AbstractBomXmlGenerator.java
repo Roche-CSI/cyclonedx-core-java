@@ -36,6 +36,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import com.fasterxml.jackson.dataformat.xml.ser.ToXmlGenerator;
 import com.fasterxml.jackson.dataformat.xml.util.DefaultXmlPrettyPrinter;
 
 public abstract class AbstractBomXmlGenerator extends CycloneDxSchema implements BomXmlGenerator {
@@ -46,6 +47,8 @@ public abstract class AbstractBomXmlGenerator extends CycloneDxSchema implements
 
 	public AbstractBomXmlGenerator() {
         mapper = new XmlMapper();
+        // Roche-CSI: Use XML 1.1 to handle extended characters in linux copyright files
+        ((XmlMapper) mapper).configure(ToXmlGenerator.Feature.WRITE_XML_1_1, true);
         prettyPrinter = new DefaultXmlPrettyPrinter();
         setupObjectMapper(mapper);
     }
@@ -55,8 +58,6 @@ public abstract class AbstractBomXmlGenerator extends CycloneDxSchema implements
 	}
 	
     Document doc;
-
-    protected static final String PROLOG = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
 
     private void setupObjectMapper(final ObjectMapper mapper) {
         mapper.setAnnotationIntrospector(
@@ -116,9 +117,9 @@ public abstract class AbstractBomXmlGenerator extends CycloneDxSchema implements
     String toXML(final Bom bom, final boolean prettyPrint) throws GeneratorException {
         try {
             if (prettyPrint) {
-                return PROLOG + System.lineSeparator() + mapper.writer(prettyPrinter).writeValueAsString(bom);
+                return mapper.writer(prettyPrinter).writeValueAsString(bom);
             }
-            return PROLOG + mapper.writeValueAsString(bom);
+            return mapper.writeValueAsString(bom);
         } catch (JsonProcessingException ex) {
             throw new GeneratorException(ex);
         }
