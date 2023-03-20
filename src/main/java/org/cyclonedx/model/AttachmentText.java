@@ -19,11 +19,18 @@
 package org.cyclonedx.model;
 
 import java.util.Objects;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlText;
 
 @SuppressWarnings("unused")
+@JsonPropertyOrder({
+    "content-type",
+    "encoding"})
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class AttachmentText {
 
     @JacksonXmlProperty(isAttribute = true)

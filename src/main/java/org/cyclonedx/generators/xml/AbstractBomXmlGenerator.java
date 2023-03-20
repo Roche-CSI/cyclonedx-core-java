@@ -27,7 +27,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import org.cyclonedx.CycloneDxSchema;
 import org.cyclonedx.exception.GeneratorException;
 import org.cyclonedx.model.Bom;
-import org.cyclonedx.util.CollectionTypeSerializer;
+import org.cyclonedx.util.DependencySerializer;
 import org.cyclonedx.util.VersionXmlAnnotationIntrospector;
 import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
@@ -50,9 +50,9 @@ public abstract class AbstractBomXmlGenerator extends CycloneDxSchema implements
         setupObjectMapper(mapper);
     }
 
-	public ObjectMapper getMapper() {
-		return mapper;
-	}
+    public ObjectMapper getMapper() {
+        return mapper;
+    }
 	
     Document doc;
 
@@ -71,13 +71,15 @@ public abstract class AbstractBomXmlGenerator extends CycloneDxSchema implements
             registerDependencyModule(mapper, false);
         } else if (this.getSchemaVersion().getVersion() == 1.3) {
             registerDependencyModule(mapper, false);
+        } else if (this.getSchemaVersion().getVersion() == 1.4) {
+            registerDependencyModule(mapper, false);
         }
     }
 
     private void registerDependencyModule(final ObjectMapper mapper, final boolean useNamespace) {
         SimpleModule depModule = new SimpleModule();
 
-        depModule.setSerializers(new CollectionTypeSerializer(useNamespace));
+        depModule.addSerializer(new DependencySerializer(useNamespace));
         mapper.registerModule(depModule);
     }
 
@@ -127,7 +129,7 @@ public abstract class AbstractBomXmlGenerator extends CycloneDxSchema implements
     /**
      * Creates a text representation of a CycloneDX BoM Document. This method
      * calls {@link #toXmlString()} and will return an empty string if {@link #toXmlString()}
-     * throws an exception. Its preferred to call {@link #toXmlString()} directly
+     * throws an exception. It's preferred to call {@link #toXmlString()} directly
      * so that exceptions can be caught.
      * @return a String of the BoM
      * @since 1.1.0

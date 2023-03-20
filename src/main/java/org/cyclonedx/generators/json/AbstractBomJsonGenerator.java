@@ -19,23 +19,26 @@
 package org.cyclonedx.generators.json;
 
 import java.lang.reflect.Field;
+
 import org.cyclonedx.CycloneDxSchema;
 import org.cyclonedx.exception.GeneratorException;
 import org.cyclonedx.model.Bom;
-import org.cyclonedx.util.CollectionTypeSerializer;
+import org.cyclonedx.model.BomReference;
 import org.cyclonedx.util.ComponentWrapperSerializer;
 import org.cyclonedx.util.LicenseChoiceSerializer;
 import org.cyclonedx.util.TrimStringSerializer;
 import org.cyclonedx.util.VersionJsonAnnotationIntrospector;
+import org.cyclonedx.util.DependencySerializer;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.util.DefaultIndenter;
 import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
+import org.cyclonedx.util.mixin.MixInBomReference;
 
 public abstract class AbstractBomJsonGenerator extends CycloneDxSchema implements BomJsonGenerator {
 
-    private final ObjectMapper mapper;
+    protected final ObjectMapper mapper;
 
     private final DefaultPrettyPrinter prettyPrinter;
 
@@ -47,9 +50,9 @@ public abstract class AbstractBomJsonGenerator extends CycloneDxSchema implement
         setupPrettyPrinter(this.prettyPrinter);
     }
 
-	public ObjectMapper getMapper() {
-		return mapper;
-	}
+    public ObjectMapper getMapper() {
+        return mapper;
+    }
 	
     private void setupPrettyPrinter(final DefaultPrettyPrinter prettyPrinter) {
         prettyPrinter.indentArraysWith(DefaultIndenter.SYSTEM_LINEFEED_INSTANCE);
@@ -72,7 +75,7 @@ public abstract class AbstractBomJsonGenerator extends CycloneDxSchema implement
 
         mapper.registerModule(licenseModule);
 
-        depModule.setSerializers(new CollectionTypeSerializer(false));
+        depModule.addSerializer(new DependencySerializer(false));
         mapper.registerModule(depModule);
 
         componentWrapperModule.addSerializer(new ComponentWrapperSerializer(mapper));
@@ -82,6 +85,7 @@ public abstract class AbstractBomJsonGenerator extends CycloneDxSchema implement
 
     String toJson(final Bom bom, final boolean prettyPrint) throws GeneratorException {
         try {
+            mapper.addMixIn(BomReference.class, MixInBomReference.class);
             if (prettyPrint) {
                 return mapper.writer(prettyPrinter).writeValueAsString(bom);
             }
