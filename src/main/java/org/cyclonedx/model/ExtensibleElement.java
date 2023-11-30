@@ -29,8 +29,9 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
-import org.cyclonedx.util.ExtensibleTypesSerializer;
-import org.cyclonedx.util.ExtensionDeserializer;
+import org.apache.commons.lang3.StringUtils;
+import org.cyclonedx.util.serializer.ExtensibleTypesSerializer;
+import org.cyclonedx.util.deserializer.ExtensionDeserializer;
 
 @JsonInclude(Include.NON_NULL)
 public abstract class ExtensibleElement {
@@ -71,6 +72,8 @@ public abstract class ExtensibleElement {
         if (this.extensions == null) {
             this.extensions = new HashMap<>();
         }
-        extensions.put(key, value);
+        if (value != null) {
+            extensions.put(key, value);
+        }
     }
 }

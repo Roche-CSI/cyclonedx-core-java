@@ -176,7 +176,7 @@
             "author": {
               "timestamp": "2018-11-13T20:20:39+00:00",
               "name": "",
-              "email": ""
+              "email": "test@mail.com"
             }
           }
         ]
@@ -253,8 +253,12 @@
           "flow": "outbound"
         },
         {
-          "classification": "pubic",
+          "classification": "public",
           "flow": "bi-directional"
+        },
+        {
+          "classification": "public",
+          "flow": "unknown"
         }
       ],
       "licenses": [
@@ -282,6 +286,14 @@
       "ref": "pkg:npm/acme/component@1.0.0",
       "dependsOn": [
         "pkg:npm/acme/common@1.0.0"
+      ]
+    },
+    {
+      "ref": "pkg:npm/acme/component@2.0.0",
+      "dependsOn": [
+        "pkg:npm/acme/common@1.1.0",
+        "pkg:npm/acme/common@2.2.0",
+        "pkg:npm/acme/common@3.3.0"
       ]
     }
   ]

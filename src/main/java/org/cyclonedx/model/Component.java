@@ -22,9 +22,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import org.cyclonedx.util.LicenseDeserializer;
-import org.cyclonedx.util.PropertyDeserializer;
-
+import org.cyclonedx.model.component.ModelCard;
+import org.cyclonedx.model.component.modelCard.ComponentData;
+import org.cyclonedx.util.deserializer.ExternalReferencesDeserializer;
+import org.cyclonedx.util.deserializer.HashesDeserializer;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -34,11 +35,12 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 import com.github.packageurl.PackageURL;
+import org.cyclonedx.util.deserializer.PropertiesDeserializer;
 
 @SuppressWarnings("unused")
 @JacksonXmlRootElement(localName = "component")
 @JsonIgnoreProperties(ignoreUnknown = true)
-@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonPropertyOrder(
     {"supplier",
      "author",
@@ -59,7 +61,11 @@ import com.github.packageurl.PackageURL;
      "externalReferences",
      "properties",
      "components",
-     "evidence"
+     "evidence",
+     "releaseNotes",
+     "modelCard",
+     "data",
+     "signature"
     })
 public class Component extends ExtensibleElement {
 
@@ -72,14 +78,22 @@ public class Component extends ExtensibleElement {
         LIBRARY("library"),
         @JsonProperty("container")
         CONTAINER("container"),
+        @JsonProperty("platform")
+        PLATFORM("platform"),
         @JsonProperty("operating-system")
         OPERATING_SYSTEM("operating-system"),
         @JsonProperty("device")
         DEVICE("device"),
+        @JsonProperty("device-driver")
+        DEVICE_DRIVER("device-driver"),
         @JsonProperty("firmware")
         FIRMWARE("firmware"),
         @JsonProperty("file")
-        FILE("file");
+        FILE("file"),
+        @JsonProperty("machine-learning-model")
+        MACHINE_LEARNING_MODEL("machine-learning-model"),
+        @JsonProperty("data")
+        DATA("data");
 
         private final String name;
 
@@ -114,13 +128,14 @@ public class Component extends ExtensibleElement {
     @JacksonXmlProperty(isAttribute = true, localName = "bom-ref")
     @JsonProperty("bom-ref")
     private String bomRef;
-    @JacksonXmlProperty(isAttribute = true)
+    @JacksonXmlProperty(isAttribute = true, localName = "mime-type")
+    @JsonProperty("mime-type")
     private String mimeType;
-    @VersionFilter(versions = {"1.2", "1.3"})
+    @VersionFilter(versions = {"1.0", "1.1"})
     private OrganizationalEntity supplier;
-    @VersionFilter(versions = {"1.2", "1.3"})
+    @VersionFilter(versions = {"1.0", "1.1"})
     private String author;
-    @VersionFilter(versions = {"1.1", "1.2", "1.3"})
+    @VersionFilter(versions = {"1.0"})
     private String publisher;
     private String group;
     private String name;
@@ -132,20 +147,34 @@ public class Component extends ExtensibleElement {
     private String copyright;
     private String cpe;
     private String purl;
-    @VersionFilter(versions = {"1.2", "1.3"})
+    @VersionFilter(versions = {"1.0", "1.1"})
     private Swid swid;
     private Boolean modified;
-    @VersionFilter(versions = {"1.1", "1.2", "1.3"})
+    @VersionFilter(versions = {"1.0"})
     private Pedigree pedigree;
-    @VersionFilter(versions = {"1.1", "1.2", "1.3"})
+    @VersionFilter(versions = {"1.0"})
     private List<ExternalReference> externalReferences;
-    @VersionFilter(versions = {"1.3"})
+    @VersionFilter(versions = {"1.0", "1.1", "1.2"})
     private List<Property> properties;
     private List<Component> components;
-    @VersionFilter(versions = {"1.3"})
+    @VersionFilter(versions = {"1.0", "1.1", "1.2"})
     private Evidence evidence;
     @JacksonXmlProperty(isAttribute = true)
     private Type type;
+    @VersionFilter(versions = {"1.0", "1.1", "1.2", "1.3"})
+    private ReleaseNotes releaseNotes;
+
+    @VersionFilter(versions = {"1.0", "1.1", "1.2", "1.3", "1.4"})
+    @JsonProperty("modelCard")
+    private ModelCard modelCard;
+
+    @VersionFilter(versions = {"1.0", "1.1", "1.2", "1.3", "1.4"})
+    @JsonProperty("data")
+    private ComponentData data;
+
+    @JsonOnly
+    @VersionFilter(versions = {"1.0", "1.1", "1.2", "1.3"})
+    private Signature signature;
 
     public String getBomRef() {
         return bomRef;
@@ -229,6 +258,7 @@ public class Component extends ExtensibleElement {
 
     @JacksonXmlElementWrapper(localName = "hashes")
     @JacksonXmlProperty(localName = "hash")
+    @JsonDeserialize(using = HashesDeserializer.class)
     public List<Hash> getHashes() {
         return hashes;
     }
@@ -246,7 +276,6 @@ public class Component extends ExtensibleElement {
 
     @JacksonXmlProperty(localName = "licenses")
     @JsonProperty("licenses")
-    @JsonDeserialize(using = LicenseDeserializer.class)
     public LicenseChoice getLicenseChoice() {
         return license;
     }
@@ -264,19 +293,15 @@ public class Component extends ExtensibleElement {
     }
 
     /**
-     * @deprecated CPE will be removed in a future version of the CycloneDX specification.
      * @return the Common Platform Enumeration of the component
      */
-    @Deprecated
     public String getCpe() {
         return cpe;
     }
 
     /**
-     * @deprecated CPE will be removed in a future version of the CycloneDX specification.
      * @param cpe a valid CPE 2.2 or CPE 2.3 string
      */
-    @Deprecated
     public void setCpe(String cpe) {
         this.cpe = cpe;
     }
@@ -322,6 +347,7 @@ public class Component extends ExtensibleElement {
 
     @JacksonXmlElementWrapper(localName = "externalReferences")
     @JacksonXmlProperty(localName = "reference")
+    @JsonDeserialize(using = ExternalReferencesDeserializer.class)
     public List<ExternalReference> getExternalReferences() {
         return externalReferences;
     }
@@ -339,13 +365,20 @@ public class Component extends ExtensibleElement {
 
     @JacksonXmlElementWrapper(localName = "properties")
     @JacksonXmlProperty(localName = "property")
-	@JsonDeserialize(using = PropertyDeserializer.class)
+    @JsonDeserialize(using = PropertiesDeserializer.class)
     public List<Property> getProperties() {
         return properties;
     }
 
     public void setProperties(List<Property> properties) {
         this.properties = properties;
+    }
+
+    public void addProperty(Property property) {
+        if (this.properties == null) {
+            this.properties = new ArrayList<>();
+        }
+        this.properties.add(property);
     }
 
     @JacksonXmlElementWrapper(localName = "components")
@@ -381,9 +414,34 @@ public class Component extends ExtensibleElement {
         this.type = type;
     }
 
+    public ReleaseNotes getReleaseNotes() { return releaseNotes; }
+
+    public void setReleaseNotes(ReleaseNotes releaseNotes) { this.releaseNotes = releaseNotes; }
+
+    public Signature getSignature() { return signature; }
+
+    public void setSignature(Signature signature) { this.signature = signature; }
+
+    public ModelCard getModelCard() {
+        return modelCard;
+    }
+
+    public void setModelCard(final ModelCard modelCard) {
+        this.modelCard = modelCard;
+    }
+
+    public ComponentData getData() {
+        return data;
+    }
+
+    public void setData(final ComponentData data) {
+        this.data = data;
+    }
+
     @Override
     public int hashCode() {
-        return Objects.hash(author, publisher, group, name, version, description, scope, hashes, license, copyright, cpe, purl, swid, modified, components, evidence, type);
+        return Objects.hash(author, publisher, group, name, version, description, scope, hashes, license, copyright,
+            cpe, purl, swid, modified, components, evidence, releaseNotes, type, modelCard, data);
     }
 
     @Override
@@ -409,6 +467,9 @@ public class Component extends ExtensibleElement {
                 Objects.equals(components, component.components) &&
                 Objects.equals(evidence, component.evidence) &&
                 Objects.equals(mimeType, component.mimeType) &&
+                Objects.equals(releaseNotes, component.releaseNotes) &&
+                Objects.equals(data, component.data) &&
+                Objects.equals(modelCard, component.modelCard) &&
                 Objects.equals(type, component.type);
     }
 }

@@ -23,18 +23,23 @@ import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+import org.cyclonedx.util.deserializer.ExternalReferencesDeserializer;
+import org.cyclonedx.util.deserializer.HashesDeserializer;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-@JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({"vendor", "name", "version", "hashes"})
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
+@JsonPropertyOrder({"vendor", "name", "version", "hashes", "externalReferences"})
+@Deprecated
 public class Tool extends ExtensibleElement {
 
     private String vendor;
     private String name;
     private String version;
     private List<Hash> hashes;
+    private List<ExternalReference> externalReferences;
 
     public String getVendor() {
         return vendor;
@@ -62,12 +67,24 @@ public class Tool extends ExtensibleElement {
 
     @JacksonXmlElementWrapper(localName = "hashes")
     @JacksonXmlProperty(localName = "hash")
+    @JsonDeserialize(using = HashesDeserializer.class)
     public List<Hash> getHashes() {
         return hashes;
     }
 
     public void setHashes(List<Hash> hashes) {
         this.hashes = hashes;
+    }
+
+    @JacksonXmlElementWrapper(localName = "externalReferences")
+    @JacksonXmlProperty(localName = "reference")
+    @JsonDeserialize(using = ExternalReferencesDeserializer.class)
+    public List<ExternalReference> getExternalReferences() {
+        return externalReferences;
+    }
+
+    public void setExternalReferences(final List<ExternalReference> externalReferences) {
+        this.externalReferences = externalReferences;
     }
 
     @Override
@@ -78,11 +95,12 @@ public class Tool extends ExtensibleElement {
         return Objects.equals(vendor, tool.vendor) &&
                 Objects.equals(name, tool.name) &&
                 Objects.equals(version, tool.version) &&
-                Objects.equals(hashes, tool.hashes);
+                Objects.equals(hashes, tool.hashes) &&
+                Objects.equals(externalReferences, tool.externalReferences);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(vendor, name, version, hashes);
+        return Objects.hash(vendor, name, version, hashes, externalReferences);
     }
 }

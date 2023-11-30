@@ -25,13 +25,15 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
-import org.cyclonedx.util.LicenseDeserializer;
+import org.cyclonedx.util.deserializer.ExternalReferencesDeserializer;
+import org.cyclonedx.util.deserializer.StringListDeserializer;
+
 import java.util.ArrayList;
 import java.util.List;
 
 @SuppressWarnings("unused")
 @JsonIgnoreProperties(ignoreUnknown = true)
-@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonPropertyOrder({
         "provider",
         "group",
@@ -45,7 +47,9 @@ import java.util.List;
         "licenses",
         "externalReferences",
         "properties",
-        "services"
+        "services",
+        "releaseNotes",
+        "signature"
 })
 public class Service extends ExtensibleElement {
 
@@ -65,9 +69,13 @@ public class Service extends ExtensibleElement {
     private List<ServiceData> data;
     private LicenseChoice license;
     private List<ExternalReference> externalReferences;
-    @VersionFilter(versions = {"1.3"})
+    @VersionFilter(versions = {"1.0", "1.1", "1.2"})
     private List<Property> properties;
     private List<Service> services;
+    private ReleaseNotes releaseNotes;
+    @JsonOnly
+    @VersionFilter(versions = {"1.0", "1.1", "1.2", "1.3"})
+    private Signature signature;
 
     public String getBomRef() {
         return bomRef;
@@ -119,6 +127,7 @@ public class Service extends ExtensibleElement {
 
     @JacksonXmlElementWrapper(localName = "endpoints")
     @JacksonXmlProperty(localName = "endpoint")
+    @JsonDeserialize(using = StringListDeserializer.class)
     public List<String> getEndpoints() {
         return endpoints;
     }
@@ -169,7 +178,6 @@ public class Service extends ExtensibleElement {
 
     @JacksonXmlProperty(localName = "licenses")
     @JsonProperty("licenses")
-    @JsonDeserialize(using = LicenseDeserializer.class)
     public LicenseChoice getLicense() {
         return license;
     }
@@ -180,6 +188,7 @@ public class Service extends ExtensibleElement {
 
     @JacksonXmlElementWrapper(localName = "externalReferences")
     @JacksonXmlProperty(localName = "reference")
+    @JsonDeserialize(using = ExternalReferencesDeserializer.class)
     public List<ExternalReference> getExternalReferences() {
         return externalReferences;
     }
@@ -205,6 +214,13 @@ public class Service extends ExtensibleElement {
         this.properties = properties;
     }
 
+    public void addProperty(Property property) {
+        if (this.properties == null) {
+            this.properties = new ArrayList<>();
+        }
+        this.properties.add(property);
+    }
+
     @JacksonXmlElementWrapper(localName = "services")
     @JacksonXmlProperty(localName = "service")
     public List<Service> getServices() {
@@ -214,4 +230,12 @@ public class Service extends ExtensibleElement {
     public void setServices(List<Service> services) {
         this.services = services;
     }
+
+    public ReleaseNotes getReleaseNotes() { return releaseNotes; }
+
+    public void setReleaseNotes(ReleaseNotes releaseNotes) { this.releaseNotes = releaseNotes; }
+
+    public Signature getSignature() { return signature; }
+
+    public void setSignature(Signature signature) { this.signature = signature; }
 }

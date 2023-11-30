@@ -18,11 +18,14 @@
  */
 package org.cyclonedx;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.commons.io.IOUtils;
 import org.cyclonedx.CycloneDxSchema.Version;
 import org.cyclonedx.generators.json.BomJsonGenerator;
 import org.cyclonedx.generators.json.BomJsonGenerator12;
 import org.cyclonedx.generators.json.BomJsonGenerator13;
+import org.cyclonedx.generators.json.BomJsonGenerator14;
+import org.cyclonedx.generators.json.BomJsonGenerator15;
 import org.cyclonedx.model.Bom;
 import org.cyclonedx.parsers.JsonParser;
 import org.cyclonedx.parsers.XmlParser;
@@ -35,7 +38,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import javax.json.JsonObject;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -65,21 +67,35 @@ public class BomJsonGeneratorTest {
         assertEquals(CycloneDxSchema.Version.VERSION_12, generator.getSchemaVersion());
         File file = writeToFile(generator.toJsonString());
         JsonParser parser = new JsonParser();
-        assertTrue(parser.isValid(file, CycloneDxSchema.Version.VERSION_12, true));
+        assertTrue(parser.isValid(file, CycloneDxSchema.Version.VERSION_12));
     }
 
     @Test
     public void schema12JsonObjectGenerationTest() throws Exception {
         Bom bom = createCommonBom("/bom-1.2.xml");
         BomJsonGenerator generator = BomGeneratorFactory.createJson(Version.VERSION_12, bom);
-        JsonObject obj = generator.toJsonObject();
+        JsonNode obj = generator.toJsonNode();
         assertNotNull(obj);
-        assertEquals("CycloneDX", obj.getString("bomFormat"));
-        assertEquals("1.2", obj.getString("specVersion"));
-        assertEquals("urn:uuid:3e671687-395b-41f5-a30f-a58921a69b79", obj.getString("serialNumber"));
-        assertEquals(1, obj.getInt("version"));
-        assertEquals(6, obj.getJsonObject("metadata").size());
-        assertEquals(3, obj.getJsonArray("components").size());
+        assertEquals("CycloneDX", obj.get("bomFormat").asText());
+        assertEquals("1.2", obj.get("specVersion").asText());
+        assertEquals("urn:uuid:3e671687-395b-41f5-a30f-a58921a69b79", obj.get("serialNumber").asText());
+        assertEquals(1, obj.get("version").asDouble());
+        assertEquals(6, obj.get("metadata").size());
+        assertEquals(3, obj.get("components").size());
+    }
+
+    @Test
+    public void schema12MultipleDependenciesJsonTest() throws Exception {
+        final byte[] bomBytes = IOUtils.toByteArray(this.getClass().getResourceAsStream("/bom-1.2.json"));
+        final JsonParser parser = new JsonParser();
+        final Bom bom = parser.parse(bomBytes);
+
+        BomJsonGenerator generator = BomGeneratorFactory.createJson(Version.VERSION_12, bom);
+        assertTrue(generator instanceof BomJsonGenerator12);
+        assertEquals(CycloneDxSchema.Version.VERSION_12, generator.getSchemaVersion());
+        File file = writeToFile(generator.toJsonString());
+        JsonParser jsonParser = new JsonParser();
+        assertTrue(jsonParser.isValid(file, CycloneDxSchema.Version.VERSION_12));
     }
 
     @Test
@@ -92,7 +108,86 @@ public class BomJsonGeneratorTest {
         assertEquals(CycloneDxSchema.Version.VERSION_13, generator.getSchemaVersion());
         File file = writeToFile(generator.toJsonString());
         JsonParser parser = new JsonParser();
-        assertTrue(parser.isValid(file, CycloneDxSchema.Version.VERSION_13, true));
+        assertTrue(parser.isValid(file, CycloneDxSchema.Version.VERSION_13));
+    }
+
+    @Test
+    public void schema13MultipleDependenciesJsonTest() throws Exception {
+        final byte[] bomBytes = IOUtils.toByteArray(this.getClass().getResourceAsStream("/bom-1.3.json"));
+        final JsonParser parser = new JsonParser();
+        final Bom bom = parser.parse(bomBytes);
+
+        BomJsonGenerator generator = BomGeneratorFactory.createJson(Version.VERSION_13, bom);
+        assertTrue(generator instanceof BomJsonGenerator13);
+        assertEquals(CycloneDxSchema.Version.VERSION_13, generator.getSchemaVersion());
+        File file = writeToFile(generator.toJsonString());
+        JsonParser jsonParser = new JsonParser();
+        assertTrue(jsonParser.isValid(file, CycloneDxSchema.Version.VERSION_13));
+    }
+
+    @Test
+    public void schema13JsonObjectGenerationTest() throws Exception {
+        Bom bom = createCommonBom("/bom-1.3.xml");
+        BomJsonGenerator generator = BomGeneratorFactory.createJson(Version.VERSION_13, bom);
+
+        assertTrue(generator instanceof BomJsonGenerator13);
+        assertEquals(CycloneDxSchema.Version.VERSION_13, generator.getSchemaVersion());
+
+        File file = writeToFile(generator.toJsonString());
+        JsonParser parser = new JsonParser();
+        assertTrue(parser.isValid(file, CycloneDxSchema.Version.VERSION_13));
+    }
+
+    @Test
+    public void schema14JsonObjectGenerationTest() throws Exception {
+        Bom bom = createCommonBom("/bom-1.4.xml");
+        BomJsonGenerator generator = BomGeneratorFactory.createJson(Version.VERSION_14, bom);
+
+        assertTrue(generator instanceof BomJsonGenerator14);
+        assertEquals(CycloneDxSchema.Version.VERSION_14, generator.getSchemaVersion());
+
+        File file = writeToFile(generator.toJsonString());
+        JsonParser parser = new JsonParser();
+        assertTrue(parser.isValid(file, CycloneDxSchema.Version.VERSION_14));
+    }
+
+    @Test
+    public void schema14MultipleDependenciesJsonTest() throws Exception {
+        final byte[] bomBytes = IOUtils.toByteArray(this.getClass().getResourceAsStream("/bom-1.4.json"));
+        final JsonParser parser = new JsonParser();
+        final Bom bom = parser.parse(bomBytes);
+
+        BomJsonGenerator generator = BomGeneratorFactory.createJson(Version.VERSION_14, bom);
+        assertTrue(generator instanceof BomJsonGenerator14);
+        assertEquals(CycloneDxSchema.Version.VERSION_14, generator.getSchemaVersion());
+        File file = writeToFile(generator.toJsonString());
+        JsonParser jsonParser = new JsonParser();
+        assertTrue(jsonParser.isValid(file, CycloneDxSchema.Version.VERSION_14));
+    }
+
+    @Test
+    public void schema14JBomLinkGenerationTest() throws Exception {
+        Bom bom = createCommonBom("/bom-1.4-bomlink.xml");
+        BomJsonGenerator generator = BomGeneratorFactory.createJson(Version.VERSION_14, bom);
+        File file = writeToFile(generator.toJsonString());
+        JsonParser parser = new JsonParser();
+        assertTrue(parser.isValid(file, CycloneDxSchema.Version.VERSION_14));
+        Bom bom2 = parser.parse(file);
+        assertNotNull(bom2.getComponents().get(0).getExternalReferences());
+        assertEquals("bom", bom2.getComponents().get(0).getExternalReferences().get(0).getType().getTypeName());
+        assertEquals("urn:cdx:f08a6ccd-4dce-4759-bd84-c626675d60a7/1", bom2.getComponents().get(0).getExternalReferences().get(0).getUrl());
+    }
+
+    @Test
+    public void schema15JsonObjectGenerationTest() throws Exception {
+        Bom bom = createCommonBom("/bom-1.5.xml");
+        BomJsonGenerator generator = BomGeneratorFactory.createJson(Version.VERSION_15, bom);
+        assertTrue(generator instanceof BomJsonGenerator15);
+        assertEquals(CycloneDxSchema.Version.VERSION_15, generator.getSchemaVersion());
+
+        File file = writeToFile(generator.toJsonString());
+        JsonParser parser = new JsonParser();
+        assertTrue(parser.isValid(file, CycloneDxSchema.Version.VERSION_15));
     }
 
     private File writeToFile(String jsonString) throws Exception {

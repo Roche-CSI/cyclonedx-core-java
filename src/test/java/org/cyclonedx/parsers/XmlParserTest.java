@@ -18,33 +18,30 @@
  */
 package org.cyclonedx.parsers;
 
-import org.apache.commons.io.IOUtils;
 import org.cyclonedx.CycloneDxSchema;
+import org.cyclonedx.CycloneDxSchema.Version;
 import org.cyclonedx.model.Bom;
 import org.cyclonedx.model.Component;
 import org.cyclonedx.model.Dependency;
 import org.cyclonedx.model.ExternalReference;
-import org.cyclonedx.model.OrganizationalContact;
-import org.cyclonedx.model.OrganizationalEntity;
 import org.cyclonedx.model.Pedigree;
-import org.cyclonedx.model.Service;
-import org.cyclonedx.model.ServiceData;
 import org.junit.jupiter.api.Test;
 import java.io.File;
 import java.util.List;
+import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@SuppressWarnings("deprecation")
-public class XmlParserTest {
+public class XmlParserTest
+    extends AbstractParserTest
+{
 
     @Test
     public void testValid10Bom() throws Exception {
-        final File file = new File(this.getClass().getResource("/bom-1.0.xml").getFile());
+        final File file = new File(Objects.requireNonNull(this.getClass().getResource("/bom-1.0.xml")).getFile());
         final XmlParser parser = new XmlParser();
         final boolean valid = parser.isValid(file, CycloneDxSchema.Version.VERSION_10);
         assertTrue(valid);
@@ -52,7 +49,7 @@ public class XmlParserTest {
 
     @Test
     public void testValid11Bom() throws Exception {
-        final File file = new File(this.getClass().getResource("/bom-1.1.xml").getFile());
+        final File file = new File(Objects.requireNonNull(this.getClass().getResource("/bom-1.1.xml")).getFile());
         final XmlParser parser = new XmlParser();
         final boolean valid = parser.isValid(file, CycloneDxSchema.Version.VERSION_11);
         assertTrue(valid);
@@ -60,7 +57,8 @@ public class XmlParserTest {
 
     @Test
     public void testValid11BomWithDependencyGraph10() throws Exception {
-        final File file = new File(this.getClass().getResource("/bom-1.1-dependency-graph-1.0.xml").getFile());
+        final File file = new File(
+            Objects.requireNonNull(this.getClass().getResource("/bom-1.1-dependency-graph-1.0.xml")).getFile());
         final XmlParser parser = new XmlParser();
         final boolean valid = parser.isValid(file, CycloneDxSchema.Version.VERSION_11);
         assertTrue(valid);
@@ -68,7 +66,8 @@ public class XmlParserTest {
 
     @Test
     public void testValid11BomWithVulnerability10() throws Exception {
-        final File file = new File(this.getClass().getResource("/bom-1.1-vulnerability-1.0.xml").getFile());
+        final File file = new File(
+            Objects.requireNonNull(this.getClass().getResource("/bom-1.1-vulnerability-1.0.xml")).getFile());
         final XmlParser parser = new XmlParser();
         final boolean valid = parser.isValid(file, CycloneDxSchema.Version.VERSION_11);
         assertTrue(valid);
@@ -76,15 +75,26 @@ public class XmlParserTest {
 
     @Test
     public void testValid12Bom() throws Exception {
-        final File file = new File(this.getClass().getResource("/bom-1.2.xml").getFile());
+        final File file = new File(Objects.requireNonNull(this.getClass().getResource("/bom-1.2.xml")).getFile());
         final XmlParser parser = new XmlParser();
         final boolean valid = parser.isValid(file, CycloneDxSchema.Version.VERSION_12);
         assertTrue(valid);
     }
 
     @Test
+    public void testValidBomLink() throws Exception {
+        final File file = new File(Objects.requireNonNull(this.getClass().getResource("/bom-1.4-bomlink.xml")).getFile());
+        final XmlParser parser = new XmlParser();
+        Bom bom = parser.parse(file);
+        assertTrue(parser.isValid(file, CycloneDxSchema.Version.VERSION_14));
+        ExternalReference ref = bom.getComponents().get(0).getExternalReferences().get(0);
+        assertEquals("bom", ref.getType().getTypeName());
+        assertEquals("urn:cdx:f08a6ccd-4dce-4759-bd84-c626675d60a7/1", ref.getUrl());
+    }
+
+    @Test
     public void testValid12BomWithPedigree() throws Exception {
-        final File file = new File(this.getClass().getResource("/bom-1.2-pedigree.xml").getFile());
+        final File file = new File(Objects.requireNonNull(this.getClass().getResource("/bom-1.2-pedigree.xml")).getFile());
         final XmlParser parser = new XmlParser();
         final boolean valid = parser.isValid(file, CycloneDxSchema.Version.VERSION_12);
         assertTrue(valid);
@@ -101,7 +111,7 @@ public class XmlParserTest {
 
     @Test
     public void testValid12BomWithPedigreeWithPatches() throws Exception {
-        final File file = new File(this.getClass().getResource("/bom-1.2-pedigree-example.xml").getFile());
+        final File file = new File(Objects.requireNonNull(this.getClass().getResource("/bom-1.2-pedigree-example.xml")).getFile());
         final XmlParser parser = new XmlParser();
         final boolean valid = parser.isValid(file, CycloneDxSchema.Version.VERSION_12);
         assertTrue(valid);
@@ -117,9 +127,7 @@ public class XmlParserTest {
 
     @Test
     public void testParsedObjects10Bom() throws Exception {
-        final byte[] bomBytes = IOUtils.toByteArray(this.getClass().getResourceAsStream("/bom-1.0.xml"));
-        final XmlParser parser = new XmlParser();
-        final Bom bom = parser.parse(bomBytes);
+        final Bom bom = getXmlBom("bom-1.0.xml");
         assertEquals(1, bom.getComponents().size());
         assertEquals("1.0", bom.getSpecVersion());
         assertEquals(1, bom.getVersion());
@@ -143,9 +151,7 @@ public class XmlParserTest {
 
     @Test
     public void testParsedObjects11Bom() throws Exception {
-        final byte[] bomBytes = IOUtils.toByteArray(this.getClass().getResourceAsStream("/bom-1.1.xml"));
-        final XmlParser parser = new XmlParser();
-        final Bom bom = parser.parse(bomBytes);
+        final Bom bom = getXmlBom("bom-1.1.xml");
         assertEquals(3, bom.getComponents().size());
         assertEquals("1.1", bom.getSpecVersion());
         assertEquals(1, bom.getVersion());
@@ -190,9 +196,8 @@ public class XmlParserTest {
 
     @Test
     public void testParsedObjects11BomWithDependencyGraph10() throws Exception {
-        final byte[] bomBytes = IOUtils.toByteArray(this.getClass().getResourceAsStream("/bom-1.1-dependency-graph-1.0.xml"));
-        final XmlParser parser = new XmlParser();
-        final Bom bom = parser.parse(bomBytes);
+        final Bom bom = getXmlBom("bom-1.1-dependency-graph-1.0.xml");
+
         assertEquals(3, bom.getComponents().size());
         assertEquals("1.1", bom.getSpecVersion());
         assertEquals(1, bom.getVersion());
@@ -221,98 +226,18 @@ public class XmlParserTest {
 
     @Test
     public void testParsedObjects12Bom() throws Exception {
-        final byte[] bomBytes = IOUtils.toByteArray(this.getClass().getResourceAsStream("/bom-1.2.xml"));
-        final XmlParser parser = new XmlParser();
-        final Bom bom = parser.parse(bomBytes);
-        assertEquals(3, bom.getComponents().size());
-        assertEquals("1.2", bom.getSpecVersion());
-        assertEquals(1, bom.getVersion());
-        assertNotNull(bom.getMetadata());
-        assertNotNull(bom.getMetadata().getTimestamp());
-        assertEquals(1, bom.getMetadata().getTools().size());
-        assertEquals("Awesome Vendor", bom.getMetadata().getTools().get(0).getVendor());
-        assertEquals("Awesome Tool", bom.getMetadata().getTools().get(0).getName());
-        assertEquals("9.1.2", bom.getMetadata().getTools().get(0).getVersion());
-        assertEquals(2, bom.getMetadata().getTools().get(0).getHashes().size());
-        assertEquals("SHA-1", bom.getMetadata().getTools().get(0).getHashes().get(0).getAlgorithm());
-        assertEquals("25ed8e31b995bb927966616df2a42b979a2717f0", bom.getMetadata().getTools().get(0).getHashes().get(0).getValue());
-        assertEquals(1, bom.getMetadata().getAuthors().size());
-        assertEquals("Samantha Wright", bom.getMetadata().getAuthors().get(0).getName());
-        assertEquals("samantha.wright@example.com", bom.getMetadata().getAuthors().get(0).getEmail());
-        assertEquals("800-555-1212", bom.getMetadata().getAuthors().get(0).getPhone());
-        assertEquals("Acme Application", bom.getMetadata().getComponent().getName());
-        assertEquals("9.1.1", bom.getMetadata().getComponent().getVersion());
-        assertEquals(Component.Type.APPLICATION, bom.getMetadata().getComponent().getType());
-        assertNotNull(bom.getMetadata().getComponent().getSwid());
-        assertEquals("swidgen-242eb18a-503e-ca37-393b-cf156ef09691_9.1.1", bom.getMetadata().getComponent().getSwid().getTagId());
-        assertEquals("Acme Application", bom.getMetadata().getComponent().getSwid().getName());
-        assertEquals("9.1.1", bom.getMetadata().getComponent().getSwid().getVersion());
-        assertEquals(0, bom.getMetadata().getComponent().getSwid().getTagVersion());
-        assertFalse(bom.getMetadata().getComponent().getSwid().isPatch());
-        assertEquals("Acme, Inc.", bom.getMetadata().getManufacture().getName());
-        assertEquals("https://example.com", bom.getMetadata().getManufacture().getUrls().get(0));
-        assertEquals(1, bom.getMetadata().getManufacture().getContacts().size());
-        assertEquals("Acme Professional Services", bom.getMetadata().getManufacture().getContacts().get(0).getName());
-        assertEquals("professional.services@example.com", bom.getMetadata().getManufacture().getContacts().get(0).getEmail());
-        assertEquals("Acme, Inc.", bom.getMetadata().getSupplier().getName());
-        assertEquals("https://example.com", bom.getMetadata().getSupplier().getUrls().get(0));
-        assertEquals(1, bom.getMetadata().getSupplier().getContacts().size());
-        assertEquals("Acme Distribution", bom.getMetadata().getSupplier().getContacts().get(0).getName());
-        assertEquals("distribution@example.com", bom.getMetadata().getSupplier().getContacts().get(0).getEmail());
+        final Bom bom = getXmlBom("bom-1.2.xml");
+
+        assertMetadata(bom, Version.VERSION_12);
+
         final List<Component> components = bom.getComponents();
-        assertEquals(3, components.size());
-        Component c1 = components.get(0);
-        assertEquals("com.acme", c1.getGroup());
-        assertEquals("tomcat-catalina", c1.getName());
-        assertEquals("9.0.14", c1.getVersion());
-        assertEquals(Component.Type.APPLICATION, c1.getType());
-        assertEquals("pkg:maven/com.acme/tomcat-catalina@9.0.14?packaging=jar", c1.getPurl());
-        // Begin Services
-        List<Service> services = bom.getServices();
-        assertEquals(1, services.size());
-        Service s = services.get(0);
-        OrganizationalEntity provider = s.getProvider();
-        assertNotNull(provider);
-        assertEquals("Partner Org", provider.getName());
-        List<String> urls = provider.getUrls();
-        assertEquals(1, urls.size());
-        assertEquals("https://partner.org", urls.get(0));
-        List<OrganizationalContact> contacts = provider.getContacts();
-        assertEquals(1, contacts.size());
-        OrganizationalContact contact = contacts.get(0);
-        assertEquals("Support", contact.getName());
-        assertEquals("support@partner", contact.getEmail());
-        assertEquals("800-555-1212", contact.getPhone());
-        assertEquals("org.partner", s.getGroup());
-        assertEquals("Stock ticker service", s.getName());
-        assertEquals("2020-Q2", s.getVersion());
-        assertEquals("Provides real-time stock information", s.getDescription());
-        List<String> endpoints = s.getEndpoints();
-        assertEquals(2, endpoints.size());
-        assertEquals("https://partner.org/api/v1/lookup", endpoints.get(0));
-        assertEquals("https://partner.org/api/v1/stock", endpoints.get(1));
-        assertNotNull(s.getAuthenticated());
-        assertNotNull(s.getxTrustBoundary());
-        assertTrue(s.getAuthenticated());
-        assertTrue(s.getxTrustBoundary());
-        List<ServiceData> data = s.getData();
-        assertEquals(3, data.size());
-        assertEquals("inbound", data.get(0).getFlow().getFlowName());
-        assertEquals("PII", data.get(0).getClassification());
-        assertEquals(ServiceData.Flow.OUTBOUND, data.get(1).getFlow());
-        assertEquals("PIFI", data.get(1).getClassification());
-        assertEquals(ServiceData.Flow.BI_DIRECTIONAL, data.get(2).getFlow());
-        assertEquals("pubic", data.get(2).getClassification());
-        assertNotNull(s.getLicense());
-        assertEquals(1, s.getLicense().getLicenses().size());
-        assertEquals("Partner license", s.getLicense().getLicenses().get(0).getName());
-        assertEquals(2, s.getExternalReferences().size());
-        assertEquals(ExternalReference.Type.WEBSITE, s.getExternalReferences().get(0).getType());
-        assertEquals("http://partner.org", s.getExternalReferences().get(0).getUrl());
-        assertEquals(ExternalReference.Type.DOCUMENTATION, s.getExternalReferences().get(1).getType());
-        assertEquals("http://api.partner.org/swagger", s.getExternalReferences().get(1).getUrl());
-        // End Services
-        // Begin Dependencies
+
+        // Assertions for bom.components
+        assertComponent(components.get(0), Component.Type.APPLICATION, "pkg:maven/com.acme/tomcat-catalina@9.0.14?packaging=jar");
+
+        assertServices(bom);
+
+        // Assertions for bom.dependencies
         assertEquals(1, bom.getDependencies().size());
         Dependency d1 = bom.getDependencies().get(0);
         assertNotNull(d1);
@@ -325,98 +250,18 @@ public class XmlParserTest {
 
     @Test
     public void testParsedObjects13Bom() throws Exception {
-        final byte[] bomBytes = IOUtils.toByteArray(this.getClass().getResourceAsStream("/bom-1.3.xml"));
-        final XmlParser parser = new XmlParser();
-        final Bom bom = parser.parse(bomBytes);
-        assertEquals(3, bom.getComponents().size());
-        assertEquals("1.3", bom.getSpecVersion());
-        assertEquals(1, bom.getVersion());
-        assertNotNull(bom.getMetadata());
-        assertNotNull(bom.getMetadata().getTimestamp());
-        assertEquals(1, bom.getMetadata().getTools().size());
-        assertEquals("Awesome Vendor", bom.getMetadata().getTools().get(0).getVendor());
-        assertEquals("Awesome Tool", bom.getMetadata().getTools().get(0).getName());
-        assertEquals("9.1.2", bom.getMetadata().getTools().get(0).getVersion());
-        assertEquals(2, bom.getMetadata().getTools().get(0).getHashes().size());
-        assertEquals("SHA-1", bom.getMetadata().getTools().get(0).getHashes().get(0).getAlgorithm());
-        assertEquals("25ed8e31b995bb927966616df2a42b979a2717f0", bom.getMetadata().getTools().get(0).getHashes().get(0).getValue());
-        assertEquals(1, bom.getMetadata().getAuthors().size());
-        assertEquals("Samantha Wright", bom.getMetadata().getAuthors().get(0).getName());
-        assertEquals("samantha.wright@example.com", bom.getMetadata().getAuthors().get(0).getEmail());
-        assertEquals("800-555-1212", bom.getMetadata().getAuthors().get(0).getPhone());
-        assertEquals("Acme Application", bom.getMetadata().getComponent().getName());
-        assertEquals("9.1.1", bom.getMetadata().getComponent().getVersion());
-        assertEquals(Component.Type.APPLICATION, bom.getMetadata().getComponent().getType());
-        assertNotNull(bom.getMetadata().getComponent().getSwid());
-        assertEquals("swidgen-242eb18a-503e-ca37-393b-cf156ef09691_9.1.1", bom.getMetadata().getComponent().getSwid().getTagId());
-        assertEquals("Acme Application", bom.getMetadata().getComponent().getSwid().getName());
-        assertEquals("9.1.1", bom.getMetadata().getComponent().getSwid().getVersion());
-        assertEquals(0, bom.getMetadata().getComponent().getSwid().getTagVersion());
-        assertFalse(bom.getMetadata().getComponent().getSwid().isPatch());
-        assertEquals("Acme, Inc.", bom.getMetadata().getManufacture().getName());
-        assertEquals("https://example.com", bom.getMetadata().getManufacture().getUrls().get(0));
-        assertEquals(1, bom.getMetadata().getManufacture().getContacts().size());
-        assertEquals("Acme Professional Services", bom.getMetadata().getManufacture().getContacts().get(0).getName());
-        assertEquals("professional.services@example.com", bom.getMetadata().getManufacture().getContacts().get(0).getEmail());
-        assertEquals("Acme, Inc.", bom.getMetadata().getSupplier().getName());
-        assertEquals("https://example.com", bom.getMetadata().getSupplier().getUrls().get(0));
-        assertEquals(1, bom.getMetadata().getSupplier().getContacts().size());
-        assertEquals("Acme Distribution", bom.getMetadata().getSupplier().getContacts().get(0).getName());
-        assertEquals("distribution@example.com", bom.getMetadata().getSupplier().getContacts().get(0).getEmail());
+        final Bom bom = getXmlBom("bom-1.3.xml");
+
+        assertMetadata(bom, Version.VERSION_13);
+
         final List<Component> components = bom.getComponents();
         assertEquals(3, components.size());
-        Component c1 = components.get(0);
-        assertEquals("com.acme", c1.getGroup());
-        assertEquals("tomcat-catalina", c1.getName());
-        assertEquals("9.0.14", c1.getVersion());
-        assertEquals(Component.Type.APPLICATION, c1.getType());
-        assertEquals("pkg:maven/com.acme/tomcat-catalina@9.0.14?packaging=jar", c1.getPurl());
-        // Begin Services
-        List<Service> services = bom.getServices();
-        assertEquals(1, services.size());
-        Service s = services.get(0);
-        OrganizationalEntity provider = s.getProvider();
-        assertNotNull(provider);
-        assertEquals("Partner Org", provider.getName());
-        List<String> urls = provider.getUrls();
-        assertEquals(1, urls.size());
-        assertEquals("https://partner.org", urls.get(0));
-        List<OrganizationalContact> contacts = provider.getContacts();
-        assertEquals(1, contacts.size());
-        OrganizationalContact contact = contacts.get(0);
-        assertEquals("Support", contact.getName());
-        assertEquals("support@partner", contact.getEmail());
-        assertEquals("800-555-1212", contact.getPhone());
-        assertEquals("org.partner", s.getGroup());
-        assertEquals("Stock ticker service", s.getName());
-        assertEquals("2020-Q2", s.getVersion());
-        assertEquals("Provides real-time stock information", s.getDescription());
-        List<String> endpoints = s.getEndpoints();
-        assertEquals(2, endpoints.size());
-        assertEquals("https://partner.org/api/v1/lookup", endpoints.get(0));
-        assertEquals("https://partner.org/api/v1/stock", endpoints.get(1));
-        assertNotNull(s.getAuthenticated());
-        assertNotNull(s.getxTrustBoundary());
-        assertTrue(s.getAuthenticated());
-        assertTrue(s.getxTrustBoundary());
-        List<ServiceData> data = s.getData();
-        assertEquals(3, data.size());
-        assertEquals("inbound", data.get(0).getFlow().getFlowName());
-        assertEquals("PII", data.get(0).getClassification());
-        assertEquals(ServiceData.Flow.OUTBOUND, data.get(1).getFlow());
-        assertEquals("PIFI", data.get(1).getClassification());
-        assertEquals(ServiceData.Flow.BI_DIRECTIONAL, data.get(2).getFlow());
-        assertEquals("pubic", data.get(2).getClassification());
-        assertNotNull(s.getLicense());
-        assertEquals(1, s.getLicense().getLicenses().size());
-        assertEquals("Partner license", s.getLicense().getLicenses().get(0).getName());
-        assertEquals(2, s.getExternalReferences().size());
-        assertEquals(ExternalReference.Type.WEBSITE, s.getExternalReferences().get(0).getType());
-        assertEquals("http://partner.org", s.getExternalReferences().get(0).getUrl());
-        assertEquals(ExternalReference.Type.DOCUMENTATION, s.getExternalReferences().get(1).getType());
-        assertEquals("http://api.partner.org/swagger", s.getExternalReferences().get(1).getUrl());
-        // End Services
-        // Begin Dependencies
+
+        assertComponent(components.get(0), Component.Type.APPLICATION, "pkg:maven/com.acme/tomcat-catalina@9.0.14?packaging=jar");
+
+        assertServices(bom);
+
+        // Assertions for bom.dependencies
         assertEquals(1, bom.getDependencies().size());
         Dependency d1 = bom.getDependencies().get(0);
         assertNotNull(d1);
@@ -428,22 +273,98 @@ public class XmlParserTest {
     }
 
     @Test
-    public void test13PrereleasePropertyBom() throws Exception {
-        final File file = new File(this.getClass().getResource("/1.3/valid-properties-1.3-prerelease.xml").getFile());
-        final XmlParser parser = new XmlParser();
-        final boolean valid = parser.isValid(file, CycloneDxSchema.Version.VERSION_13);
-        assertFalse(valid);
-        final Bom bom1 = parser.parse(file);
-        Component c1 = bom1.getComponents().get(0);
-        assertEquals(2, c1.getProperties().size());
-        assertEquals("Foo", c1.getProperties().get(0).getName());
-        assertNull(c1.getProperties().get(0).getValue());
+    public void testParsedObjects14Bom() throws Exception {
+        final Bom bom = getXmlBom("bom-1.4.xml");
 
-        System.setProperty("cyclonedx.prerelease.13.properties", "true");
-        final Bom bom2 = parser.parse(file);
-        Component c2 = bom2.getComponents().get(0);
-        assertEquals(2, c2.getProperties().size());
-        assertEquals("Foo", c2.getProperties().get(0).getName());
-        assertEquals("Bar", c2.getProperties().get(0).getValue());
+        assertCommonBomProperties(bom, Version.VERSION_14);
+
+        assertMetadata(bom.getMetadata(), Version.VERSION_14);
+        assertComponent(bom, Version.VERSION_14);
+        assertServices(bom);
+        assertCompositions(bom, Version.VERSION_14);
+        assertVulnerabilities(bom, Version.VERSION_14);
+
+        // Dependencies
+        assertEquals(1, bom.getDependencies().size());
+        Dependency d1 = bom.getDependencies().get(0);
+        assertNotNull(d1);
+        assertEquals("pkg:maven/com.acme/jackson-databind@2.9.4", d1.getRef());
+
+        //Assert Bom Properties
+        assertNull(bom.getProperties());
+
+        //Assert Annotations
+        assertAnnotations(bom, Version.VERSION_14);
+        //Assert Formulation
+        assertFormulation(bom, Version.VERSION_14);
+    }
+
+    @Test
+    public void testParsedObjects15Bom() throws Exception {
+        final Bom bom = getXmlBom("bom-1.5.xml");
+
+        assertCommonBomProperties(bom, Version.VERSION_15);
+
+        assertMetadata(bom.getMetadata(), Version.VERSION_15);
+        assertComponent(bom, Version.VERSION_15);
+        assertServices(bom);
+        assertCompositions(bom, Version.VERSION_15);
+        assertVulnerabilities(bom, Version.VERSION_15);
+
+        // Dependencies
+        assertEquals(1, bom.getDependencies().size());
+        Dependency d1 = bom.getDependencies().get(0);
+        assertNotNull(d1);
+        assertEquals("pkg:maven/com.acme/jackson-databind@2.9.4", d1.getRef());
+
+        //Assert Bom Properties
+        assertEquals(bom.getProperties().size(), 1);
+
+        //Assert Annotations
+        assertAnnotations(bom, Version.VERSION_15);
+        //Assert Formulation
+        assertFormulation(bom, Version.VERSION_15);
+    }
+
+    @Test
+    public void testParsedObjects15Bom_validTools() throws Exception {
+        final Bom bom = getXmlBom("1.5/valid-metadata-tool-1.5.xml");
+        assertCommonBomProperties(bom, Version.VERSION_15);
+        assertMetadata_validTools(bom.getMetadata());
+    }
+
+    @Test
+    public void testParsedObjects14Bom_WithVulnsExtension() throws Exception {
+        final Bom bom = getXmlBom("valid-ext-vulnerability-1.4.xml");
+
+        assertEquals("1.4", bom.getSpecVersion());
+        assertEquals(1, bom.getVersion());
+        assertNull(bom.getVulnerabilities());
+    }
+
+    @Test
+    public void testIssue336Regression() throws Exception {
+        final Bom bom = getXmlBom("regression/issue336.xml");
+        assertEquals("foo", bom.getMetadata().getComponent().getProperties().get(0).getName());
+        assertEquals("bar", bom.getMetadata().getComponent().getProperties().get(0).getValue());
+    }
+    
+    @Test
+    public void testIssue338RegressionWithSingleTool() throws Exception {
+        final Bom bom = getXmlBom("regression/issue338-single-tool.xml");
+        assertEquals("acme-tool-a", bom.getMetadata().getTools().get(0).getName());
+    }
+
+    @Test
+    public void testIssue338RegressionWithMultipleTools() throws Exception {
+        final Bom bom = getXmlBom("regression/issue338-multiple-tools.xml");
+        assertEquals("acme-tool-a", bom.getMetadata().getTools().get(0).getName());
+        assertEquals("acme-tool-b", bom.getMetadata().getTools().get(1).getName());
+    }
+
+    @Test
+    public void testIssue343Regression() throws Exception {
+        final Bom bom = getXmlBom("regression/issue343-empty-hashes.xml");
+        assertEquals(0, bom.getComponents().get(0).getHashes().size());
     }
 }
